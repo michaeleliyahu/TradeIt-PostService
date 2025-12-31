@@ -1,0 +1,41 @@
+services:
+  post-service:
+    build: .
+    ports:
+      - "8002:8000"  # Different port than identity service
+    environment:
+      - DATABASE_URL=postgresql://post_user:post_password@post-db:5432/post_db
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - DEBUG=false
+    depends_on:
+      - post-db
+      - rabbitmq
+    volumes:
+      - .:/app
+    command: ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+  post-db:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=post_db
+      - POSTGRES_USER=post_user
+      - POSTGRES_PASSWORD=post_password
+    ports:
+      - "5434:5432"  # Different port than identity service DB
+    volumes:
+      - post_db_data:/var/lib/postgresql/data
+
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    ports:
+      - "5672:5672"   # AMQP port
+      - "15672:15672" # Management UI port
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+volumes:
+  post_db_data:
+  rabbitmq_data:
