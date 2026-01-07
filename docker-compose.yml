@@ -7,6 +7,8 @@ services:
       - DATABASE_URL=postgresql://post_user:post_password@post-db:5432/post_db
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
       - DEBUG=false
+      - JWT_SECRET_KEY=super-secret-jwt-key-change-in-production-123
+      - JWT_ALGORITHM=HS256
     depends_on:
       - post-db
       - rabbitmq
