@@ -4,19 +4,14 @@
 services:
   post-service:
     build: .
+    env_file:
+      - .env
     ports:
       - "8002:8000"  # Different port than identity service
-    environment:
-      - DATABASE_URL=postgresql://post_user:post_password@post-db:5432/post_db
-      - RABBITMQ_URL=amqp://guest:guest@tradeit-rabbitmq:5672/
-      - DEBUG=false
-      - JWT_SECRET_KEY=super-secret-jwt-key-change-in-production-123
-      - JWT_ALGORITHM=HS256
     depends_on:
       - post-db
     volumes:
       - .:/app
-    command: ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
     networks:
       - tradeit-network
       - default
@@ -24,10 +19,8 @@ services:
 
   post-db:
     image: postgres:15
-    environment:
-      - POSTGRES_DB=post_db
-      - POSTGRES_USER=post_user
-      - POSTGRES_PASSWORD=post_password
+    env_file:
+      - .env
     ports:
       - "5434:5432"  # Different port than identity service DB
     volumes:
