@@ -1,3 +1,6 @@
+# Post service compose file
+# Requires shared infrastructure: run 'docker-compose up -d' from TradeIT root first
+
 services:
   post-service:
     build: .
@@ -5,16 +8,19 @@ services:
       - "8002:8000"  # Different port than identity service
     environment:
       - DATABASE_URL=postgresql://post_user:post_password@post-db:5432/post_db
-      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - RABBITMQ_URL=amqp://guest:guest@tradeit-rabbitmq:5672/
       - DEBUG=false
       - JWT_SECRET_KEY=super-secret-jwt-key-change-in-production-123
       - JWT_ALGORITHM=HS256
     depends_on:
       - post-db
-      - rabbitmq
     volumes:
       - .:/app
     command: ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    networks:
+      - tradeit-network
+      - default
+    restart: on-failure
 
   post-db:
     image: postgres:15
@@ -27,17 +33,9 @@ services:
     volumes:
       - post_db_data:/var/lib/postgresql/data
 
-  rabbitmq:
-    image: rabbitmq:3.12-management
-    ports:
-      - "5672:5672"   # AMQP port
-      - "15672:15672" # Management UI port
-    environment:
-      - RABBITMQ_DEFAULT_USER=guest
-      - RABBITMQ_DEFAULT_PASS=guest
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
+networks:
+  tradeit-network:
+    external: true
 
 volumes:
   post_db_data:
-  rabbitmq_data:
